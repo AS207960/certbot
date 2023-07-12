@@ -456,6 +456,12 @@ def prepare_and_parse_args(plugins: plugins_disco.PluginsRegistry, args: List[st
         default=flag_default("autorenew"), dest="autorenew",
         help="Disable auto renewal of certificates. (default: False)")
 
+    helpful.add(
+        ["run", "certonly", "automation"],
+        "--auto-server", action="store_true", default=flag_default("auto_server"),
+        dest="auto_server", help="Automatically determine ACME server from CAA."
+    )
+
     # Deprecated arguments
     helpful.add_deprecated_argument("--os-packages-only", 0)
     helpful.add_deprecated_argument("--no-self-upgrade", 0)

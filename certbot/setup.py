@@ -48,6 +48,7 @@ install_requires = [
     'parsedatetime>=2.4',
     'pyrfc3339',
     'pytz>=2019.3',
+    'dnspython>=2.3.0',
     # This dependency needs to be added using environment markers to avoid its
     # installation on Linux.
     'pywin32>=300 ; sys_platform == "win32"',

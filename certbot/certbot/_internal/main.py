@@ -42,6 +42,7 @@ from certbot._internal import renewal
 from certbot._internal import snap_config
 from certbot._internal import storage
 from certbot._internal import updater
+from certbot._internal import auto_server
 from certbot._internal.display import obj as display_obj
 from certbot._internal.display import util as internal_display_util
 from certbot._internal.plugins import disco as plugins_disco
@@ -719,6 +720,10 @@ def _determine_account(config: configuration.NamespaceConfig
             raise errors.Error(
                 "Registration cannot proceed without accepting "
                 "Terms of Service.")
+
+    if config.auto_server:
+        issuers = auto_server.auto_discover_server(config)
+        config.server = auto_server.issuer_to_directory(issuers[0])
 
     account_storage = account.AccountFileStorage(config)
     acme: Optional[acme_client.ClientV2] = None

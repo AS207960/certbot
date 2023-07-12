@@ -68,7 +68,6 @@ def acme_from_config_key(config: configuration.NamespaceConfig, key: jose.JWK,
     net = acme_client.ClientNetwork(key, alg=alg, account=regr,
                                     verify_ssl=(not config.no_verify_ssl),
                                     user_agent=determine_user_agent(config))
-
     directory = acme_client.ClientV2.get_directory(config.server, net)
     return acme_client.ClientV2(directory, net)
 
