@@ -6,6 +6,7 @@ import dns.rdatatype
 import dataclasses
 from certbot import configuration
 from certbot import errors
+from certbot import interfaces
 
 
 @dataclasses.dataclass
@@ -50,15 +51,16 @@ class Issuer:
 
 
 def auto_discover_server(
-    config: configuration.NamespaceConfig
+    config: configuration.NamespaceConfig,
+    authenticator: typing.Optional[interfaces.Authenticator],
 ) -> typing.List[bytes]:
     resolver = dns.resolver.Resolver()
 
     domains = []
 
-    for domain in config.domains:
+    for domain_str in config.domains:
         try:
-            domain = dns.name.from_text(domain)
+            domain = dns.name.from_text(domain_str)
         except dns.exception.DNSException as e:
             raise errors.Error(f"Failed to parse domain {domain}: {e}")
 
@@ -119,14 +121,25 @@ def auto_discover_server(
                 priority = 0
             else:
                 try:
-                    priority = int(priority)
+                    priority = int(priority, 10)
                 except ValueError:
                     raise errors.Error(f"Invalid priority for {domain}: {priority}")
 
                 if priority < 1:
                     raise errors.Error(f"Invalid priority for {domain}: {priority}")
 
+            validation_methods = rr.get_property(b"validationmethods")
+            if authenticator and validation_methods:
+                validation_methods = validation_methods.split(b",")
+                if not any(
+                    c.typ.encode() in validation_methods for c in authenticator.get_chall_pref(domain_str)
+                ):
+                    continue
+
             issuers.append(Issuer(issuer=rr.issuer, priority=priority))
+
+        if not issuers:
+            raise errors.Error(f"No issuers found for {domain}")
 
         domains.append((domain, issuers))
 

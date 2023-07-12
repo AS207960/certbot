@@ -691,8 +691,10 @@ def _csr_report_new_cert(config: configuration.NamespaceConfig, cert_path: Optio
     )
 
 
-def _determine_account(config: configuration.NamespaceConfig
-                       ) -> Tuple[account.Account,
+def _determine_account(
+    config: configuration.NamespaceConfig,
+    authenticator: Optional[interfaces.Authenticator],
+) -> Tuple[account.Account,
                                   Optional[acme_client.ClientV2]]:
     """Determine which account to use.
 
@@ -722,7 +724,7 @@ def _determine_account(config: configuration.NamespaceConfig
                 "Terms of Service.")
 
     if config.auto_server:
-        issuers = auto_server.auto_discover_server(config)
+        issuers = auto_server.auto_discover_server(config, authenticator)
         config.server = auto_server.issuer_to_directory(issuers[0])
 
     account_storage = account.AccountFileStorage(config)
@@ -835,7 +837,7 @@ def _init_le_client(config: configuration.NamespaceConfig,
     acc: Optional[account.Account]
     if authenticator is not None:
         # if authenticator was given, then we will need account...
-        acc, acme = _determine_account(config)
+        acc, acme = _determine_account(config, authenticator)
         logger.debug("Picked account: %r", acc)
     else:
         acc, acme = None, None
