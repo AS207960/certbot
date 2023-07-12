@@ -4,6 +4,7 @@ import dns.resolver
 import dns.exception
 import dns.rdatatype
 import dataclasses
+import warnings
 from certbot import configuration
 from certbot import errors
 from certbot import interfaces
@@ -113,7 +114,11 @@ def auto_discover_server(
 
         issuers = []
         for rr in relevant_set:
-            if rr.get_property(b"discovery", b"true") != b"true":
+            discovery = rr.get_property(b"discovery", b"true")
+            if discovery == b"false":
+                continue
+            elif discovery != b"true":
+                warnings.warn(f"Invalid discovery for {domain}: {discovery}")
                 continue
 
             priority = rr.get_property(b"priority")
@@ -123,10 +128,12 @@ def auto_discover_server(
                 try:
                     priority = int(priority, 10)
                 except ValueError:
-                    raise errors.Error(f"Invalid priority for {domain}: {priority}")
+                    warnings.warn(f"Invalid priority for {domain}: {priority}")
+                    continue
 
                 if priority < 1:
-                    raise errors.Error(f"Invalid priority for {domain}: {priority}")
+                    warnings.warn(f"Invalid priority for {domain}: {priority}")
+                    continue
 
             validation_methods = rr.get_property(b"validationmethods")
             if authenticator and validation_methods:
